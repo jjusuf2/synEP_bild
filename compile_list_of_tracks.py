@@ -79,8 +79,8 @@ condition_mapping[5] = {
 
 conditions_to_remove[5] = []
 
-folders_path_dict = {5: '../final_tracks_20250310/export_qc_filtered_5sTracks',
-                    30: '../final_tracks_20250310/export_qc_filtered_30sTracks'}
+folders_path_dict = {5: '/mnt/md0/jjusuf/bild/final_tracks_20250310/export_qc_filtered_5sTracks',
+                    30: '/mnt/md0/jjusuf/bild/final_tracks_20250310/export_qc_filtered_30sTracks'}
 
 
 ## now generate a table of all tracks

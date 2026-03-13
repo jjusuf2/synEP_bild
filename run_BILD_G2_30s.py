@@ -67,7 +67,7 @@ def calculate_and_save_BILD_result(traj_num):
         print(f'  tracjectory {traj_num} failed, skipped')
     return profile_str
 
-chunk_size = 4
+chunk_size = 12
 num_chunks = len(data_nl)//chunk_size
 
 for i in range(num_chunks):

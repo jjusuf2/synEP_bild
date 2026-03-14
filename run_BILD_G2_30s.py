@@ -79,3 +79,8 @@ for i in range(num_chunks):
         chunk_profiles = p.map(calculate_and_save_BILD_result, indices_in_chunk)
     all_tracks_with_profiles.loc[indices_in_chunk, 'profile'] = chunk_profiles
     all_tracks_with_profiles.to_csv('all_tracks_with_profiles.csv')  # save results
+
+    s = ''
+    for profile in all_tracks_with_profiles.iloc[:chunk_end]['profile']:
+        s += profile
+        print(f'mean so far: {np.mean(np.array(list(s)).astype("int")):.4f}')

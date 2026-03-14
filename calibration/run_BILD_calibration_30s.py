@@ -42,17 +42,17 @@ fitres_G7B8G2 = fit.run(show_progress=True)
 
 ## fit results
 
+delta_t = 30  # seconds
+
 # Unlooped state (ΔCTCF)
 G = np.exp(fitres_noCTCF['params']['log(Γ) (dim 0)'])
 J = np.exp(fitres_noCTCF['params']['log(J) (dim 0)'])
 
-print(f"{'gamma':>10s} = {G}")
-print(f"{'J':>10s} = {J}")
-
 # Following eq. (5.22) in Simon's PhD thesis
-L = np.ceil(np.sqrt(4/np.pi)*J/G).astype(int)
+L_min = np.ceil(np.sqrt(4/np.pi)*J/G).astype(int)
+L = 16
 D = np.pi*L*G**2 / (4*J)
-k = np.pi/4*(L*G/J)**2
+k = np.pi/4*(L*G/J)**2  # effectively k/gamma (lowercase gamma, that is)
 
 # put in synEP parameters
 tether_length_looped_kb = 1.8
@@ -61,15 +61,16 @@ dist_btwn_CTCF_sites_kb = 335
 # Looped state (from ΔRad21, with genomic rescaling)
 J_dRAD21 = np.exp(fitres_dRAD21['params']['log(J) (dim 0)'])
 J_looped = tether_length_looped_kb/dist_btwn_CTCF_sites_kb * J_dRAD21
-L_looped = np.sqrt(4/np.pi)*J_looped/G
+L_looped = J_looped * k / D  # from Eq. 5.24 in Simon's thesis
 
 ## If L_looped > 1.6, apply decomposition by golden ratio, as described
 ## in Simon's PhD thesis, paragraph below eq. (5.25).
 ## Since here L_looped < 1 we spare the effort
 
-print( "Rouse model parameters from MSD fits")
+print(f"{'∆t':>10s} = {delta_t}")
 print(f"{'G':>10s} = {G}")
 print(f"{'J':>10s} = {J}")
+print(f"{'L_min':>10s} = {L_min}")
 print(f"{'L':>10s} = {L}")
 print(f"{'k':>10s} = {k}")
 print(f"{'D':>10s} = {D}")
@@ -77,6 +78,14 @@ print(f"{'J_dRAD21':>10s} = {J_dRAD21}")
 print(f"{'J_looped':>10s} = {J_looped}")
 print(f"{'L_looped':>10s} = {L_looped}")
 print()
-print(f"sigma^2 for S+V-A6B8_GSK:      {[np.exp(fitres_noCTCF['params']['log(σ²) (dim 0)']), np.exp(fitres_noCTCF['params']['log(σ²) (dim 1)']), np.exp(fitres_noCTCF['params']['log(σ²) (dim 2)'])]}")
-print(f"sigma^2 for G7B8G2_GSK_∆RAD21: {[np.exp(fitres_dRAD21['params']['log(σ²) (dim 0)']), np.exp(fitres_dRAD21['params']['log(σ²) (dim 1)']), np.exp(fitres_dRAD21['params']['log(σ²) (dim 2)'])]}")
-print(f"sigma^2 for G7B8G2_GSK:        {[np.exp(fitres_G7B8G2['params']['log(σ²) (dim 0)']), np.exp(fitres_G7B8G2['params']['log(σ²) (dim 1)']), np.exp(fitres_G7B8G2['params']['log(σ²) (dim 2)'])]}")
+print(f"sigma_spot for S+V-A6B8_GSK:      {[np.sqrt(np.exp(fitres_noCTCF['params']['log(σ²) (dim 0)'])/2), np.sqrt(np.exp(fitres_noCTCF['params']['log(σ²) (dim 1)'])/2), np.sqrt(np.exp(fitres_noCTCF['params']['log(σ²) (dim 2)'])/2)]}")
+print(f"sigma_spot for G7B8G2_GSK_∆RAD21: {[np.sqrt(np.exp(fitres_dRAD21['params']['log(σ²) (dim 0)'])/2), np.sqrt(np.exp(fitres_dRAD21['params']['log(σ²) (dim 1)'])/2), np.sqrt(np.exp(fitres_dRAD21['params']['log(σ²) (dim 2)'])/2)]}")
+print(f"sigma_spot for G7B8G2_GSK:        {[np.sqrt(np.exp(fitres_G7B8G2['params']['log(σ²) (dim 0)'])/2), np.sqrt(np.exp(fitres_G7B8G2['params']['log(σ²) (dim 1)'])/2), np.sqrt(np.exp(fitres_G7B8G2['params']['log(σ²) (dim 2)'])/2)]}")
+# calculate in timescale of seconds
+G_sec = G / np.sqrt(delta_t)
+k_sec = k / delta_t
+D_sec = D / delta_t
+print("Using a timescale of seconds:")
+print(f"{'G':>10s} = {G_sec}")
+print(f"{'k':>10s} = {k_sec}")
+print(f"{'D':>10s} = {D_sec}")

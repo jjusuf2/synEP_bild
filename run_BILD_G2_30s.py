@@ -83,4 +83,4 @@ for i in range(num_chunks):
     s = ''
     for profile in all_tracks_with_profiles.iloc[:chunk_end]['profile']:
         s += profile
-        print(f'mean so far: {np.mean(np.array(list(s)).astype("int")):.4f}')
+    print(f'mean so far: {np.mean(np.array(list(s)).astype("int")):.4f}')

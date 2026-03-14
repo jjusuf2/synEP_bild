@@ -34,10 +34,10 @@ data_list_G2_30s = generate_data_list('G7B8G2_GSK', 30)
 data_nl = nl.util.userinput.make_TaggedSet(data_list_G2_30s)
 
 ## enter parameters and build model
-L = 7
-k = 1.137144617300876
-D = 0.0038661826451376474
-L_looped = 0.14278424112948787
+L = 16
+k = 5.94
+D = 0.00884
+L_looped = 0.348
 
 w = np.zeros(3*L+1)
 w[L] = -1
@@ -46,7 +46,7 @@ w[2*L] = 1
 model = bild.models.MultiStateRouse(3*L+1, D, k,
                                     looppositions = [None, (L, 2*L, 1/L_looped)],
                                     measurement = w,
-                                    localization_error = np.sqrt(np.array([0.004356220414642604, 0.004178863299165964, 0.0042861628536375535])),
+                                    localization_error = np.array([0.062, 0.064, 0.063])*np.sqrt(2),
                                    )
 
 ## run BILD (with multiprocessing)
@@ -63,7 +63,7 @@ def calculate_and_save_BILD_result(traj_num):
         profile_str = "".join(map(str, result.best_profile()))
         print(f'  tracjectory {traj_num} mean = {np.mean(best_profile)}')
     except:
-        pass
+        profile_str = ""
         print(f'  tracjectory {traj_num} failed, skipped')
     return profile_str
 

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import bayesmsd
 import argparse
 
@@ -58,6 +59,5 @@ def generate_data_list(condition, delta_t):
 data_list, _ = generate_data_list(condition_name, delta_t)
 
 fit = bayesmsd.lib.TwoLocusRouseFit(data_list)
-print("Fitting MSD")
 fitres = fit.run(show_progress=True)
-print(f"sigma_spot (x,y,z): {np.sqrt(np.exp(fitres['params']['log(σ²) (dim 0)'])/2)},{np.sqrt(np.exp(fitres_G7B8G2['params']['log(σ²) (dim 1)'])/2)},{np.sqrt(np.exp(fitres_G7B8G2['params']['log(σ²) (dim 2)'])/2)}")
+print(f"sigma_spot (x,y,z): {np.sqrt(np.exp(fitres['params']['log(σ²) (dim 0)'])/2)},{np.sqrt(np.exp(fitres['params']['log(σ²) (dim 1)'])/2)},{np.sqrt(np.exp(fitres['params']['log(σ²) (dim 2)'])/2)}")

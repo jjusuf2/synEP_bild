@@ -6,6 +6,7 @@ from multiprocessing import Pool
 from datetime import datetime
 import argparse
 from pathlib import Path
+import sys
 
 ## Parse arguments
 
@@ -112,6 +113,11 @@ data_list, row_indices = generate_data_list(condition_name, delta_t)
 
 save_folder = Path(f'/mnt/md0/jjusuf/bild/final_profiles_20250310/{condition_name}_{delta_t}s')
 save_folder.mkdir(parents=True, exist_ok=True)
+
+# save metadata file
+cmd = " ".join(sys.argv)
+with open(f'{save_folder}/bild_run_info.txt', 'w') as f:
+    f.write(f'{cmd}\n{datetime.now().strftime("%Y-%m-%d %H:%M:%S")}')
 
 ## build the model
 

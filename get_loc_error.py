@@ -26,8 +26,7 @@ parser.add_argument(
 # boolean argument
 parser.add_argument(
     "--round",
-    type=bool,
-    action='store_true'
+    action='store_true',
     help="Whether to round to 3 decimal places."
 )
 

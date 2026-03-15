@@ -1,5 +1,11 @@
 # Running BILD on synEP data
 
+## Environment
+* python 3.9.23
+* bild 0.0.5
+* noctiluca 0.1.4
+* bayesmsd 0.1.7
+
 ## Data
 **Input data:** The final tracks are stored in a directory `final_tracks_20250310` (not part of this repository), which contains `export_qc_filtered_5sTracks` and `export_qc_filtered_30sTracks`. In each of these, there is a separate folder for each movie, named according to the date, condition, and other important info.
 

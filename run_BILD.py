@@ -104,6 +104,9 @@ def generate_data_list(condition, delta_t):
             table_full['pro_z (nm)']-table_full['enh_z (nm)']
         ]).T / 1000
 
+        if np.all(np.isnan(table_xyz)):  # don't add trajectory if it's all just nan's
+            continue
+
         data_list.append(table_xyz)
         row_indices.append(idx)
 

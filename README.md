@@ -27,7 +27,7 @@ Example usage:
 ```python run_BILD.py --condition_name G7B8G2_GSK --delta_t 5 --L 16 --k 1.67 --D 0.00239 --L_looped 0.297 --loc_error 0.044,0.040,0.044 --nproc 4```
 
 ## Localization error
-To get the localization error needed to run BILD, use `get_loc_error.py`.
+To get the localization error needed to run BILD, use `get_loc_error.py`. This will report the single-spot localization error in x, y, and z.
 
 Example usage:
 

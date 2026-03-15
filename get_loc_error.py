@@ -72,6 +72,6 @@ sigma_y = np.sqrt(np.exp(fitres['params']['log(σ²) (dim 1)'])/2)
 sigma_z = np.sqrt(np.exp(fitres['params']['log(σ²) (dim 2)'])/2)
 
 if round:
-    print(f"{condition_name} sigma_spot (x,y,z): {sigma_x:.3f},{sigma_y:.3f},{sigma_z:.3f}")
+    print(f"{condition_name} dt={delta_t}s sigma_spot (x,y,z): {sigma_x:.3f},{sigma_y:.3f},{sigma_z:.3f}")
 else:
-    print(f"{condition_name} sigma_spot (x,y,z): {sigma_x},{sigma_y},{sigma_z}")
+    print(f"{condition_name} dt={delta_t}s sigma_spot (x,y,z): {sigma_x},{sigma_y},{sigma_z}")

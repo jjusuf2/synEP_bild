@@ -83,7 +83,7 @@ localization_error = np.array(loc_error.split(',')).astype('float')  # turn into
 nproc = args.nproc
 
 ## load the tracks
-all_tracks = pd.read_csv('/mnt/md0/jjusuf/bild/synEP_bild/all_tracks.csv', index_col=0)
+all_tracks = pd.read_csv('/mnt/md0/jjusuf/bild/synEP_bild/all_tracks.csv')
 
 ## write a function to grab the data for a given condition and ∆t (in the proper format for BILD)
 def generate_data_list(condition, delta_t):

@@ -8,7 +8,7 @@ import bayesmsd
 from pathlib import Path
 
 ## load the tracks
-all_tracks = pd.read_csv('../all_tracks.csv', index_col=0)
+all_tracks = pd.read_csv('../all_tracks.csv')
 
 ## write a function to grab the data for a given condition and ∆t (in the proper format for BILD)
 def generate_data_list(condition, delta_t):

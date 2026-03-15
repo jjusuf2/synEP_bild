@@ -116,5 +116,4 @@ for delta_t in [5, 30]:
 
 all_tracks = pd.DataFrame(all_tracks, columns=['date','delta_t','condition','path','name','track_len'])
 
-all_tracks.to_csv('all_tracks.csv')
-
+all_tracks.to_csv('all_tracks.csv', index=False)

@@ -23,12 +23,20 @@ parser.add_argument(
     help="Time interval between frames in seconds"
 )
 
+# boolean argument
+parser.add_argument(
+    "--round",
+    type=bool,
+    action='store_true'
+    help="Whether to round to 3 decimal places."
+)
+
 args = parser.parse_args()
 
 # Access values
 condition_name = args.condition_name
 delta_t = args.delta_t
-
+round = args.round
 
 ## load the tracks
 all_tracks = pd.read_csv('/mnt/md0/jjusuf/bild/synEP_bild/all_tracks.csv')
@@ -60,4 +68,11 @@ data_list, _ = generate_data_list(condition_name, delta_t)
 
 fit = bayesmsd.lib.TwoLocusRouseFit(data_list)
 fitres = fit.run(show_progress=True)
-print(f"sigma_spot (x,y,z): {np.sqrt(np.exp(fitres['params']['log(σ²) (dim 0)'])/2)},{np.sqrt(np.exp(fitres['params']['log(σ²) (dim 1)'])/2)},{np.sqrt(np.exp(fitres['params']['log(σ²) (dim 2)'])/2)}")
+sigma_x = np.sqrt(np.exp(fitres['params']['log(σ²) (dim 0)'])/2)
+sigma_y = np.sqrt(np.exp(fitres['params']['log(σ²) (dim 1)'])/2)
+sigma_z = np.sqrt(np.exp(fitres['params']['log(σ²) (dim 2)'])/2)
+
+if round:
+    print(f"sigma_spot (x,y,z): {sigma_x:.3f},{sigma_y:.3f},{sigma_z:.3f}")
+else:
+    print(f"sigma_spot (x,y,z): {sigma_x},{sigma_y},{sigma_z}")

@@ -18,5 +18,10 @@ It is helpful to have a table containing all the available tracks and their file
 We calibrate the BILD model on the 340kb synEP loop using the scripts `calibration/run_BILD_calibration_5s.py` and `calibration/run_BILD_calibration_30s.py` for ∆t = 5 and 30 seconds respectively. These scripts use S+V-A6B8 (actually ∆CTCF-sites) as the ∆CTCF condition and G2 ∆RAD21 as the ∆RAD21 condition.
 
 ## Run BILD
-Use the script `run_BILD.py` to run BILD. Input the parameters from the calibration as arguments. Make sure to use the single-spot localization error. Example usage:
+Use the script `run_BILD.py` to run BILD. Input the parameters from the calibration as arguments. For `--loc_error`, make sure to input the single-spot localization error for the tracks you are running the inference on (get from MSD fitting).
+
+Example usage:
+
+```python run_BILD.py --condition_name G7B8G2_GSK --delta_t 30 --L 16 --k 5.94 --D 0.00884 --L_looped 0.348 --loc_error 0.047,0.046,0.046 --nproc 4```
+
 ```python run_BILD.py --condition_name G7B8G2_GSK --delta_t 5 --L 16 --k 1.67 --D 0.00239 --L_looped 0.297 --loc_error 0.044,0.040,0.044 --nproc 4```

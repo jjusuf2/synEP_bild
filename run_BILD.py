@@ -135,7 +135,7 @@ def calculate_and_save_BILD_result(args):
         result = bild.sample(traj, model, show_progress=False)
         best_profile = result.best_profile()
         profile_str = "".join(map(str, best_profile))
-        print(f'   {str(np.sum(best_profile)):>3s} /{str(len(best_profile)):>3s} timepoints looped (mean {np.mean(best_profile)*100:.1f}%)')
+        print(f'   {name}  {str(np.sum(best_profile)):>3s} /{str(len(best_profile)):>3s} timepoints looped (mean {np.mean(best_profile)*100:.1f}%)')
     except:
         profile_str = ""
         print('   trajectory failed')

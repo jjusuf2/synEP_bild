@@ -152,7 +152,7 @@ def calculate_and_save_BILD_result(args):
         f.write(profile_str)
 
 chunk_size = nproc
-num_chunks = len(data_list)//chunk_size
+num_chunks = int(np.ceil(len(data_list) / chunk_size))
 
 with Pool(nproc) as p:
     for i in range(num_chunks):

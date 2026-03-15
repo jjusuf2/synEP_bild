@@ -42,10 +42,10 @@ data_list_G2_30s, row_indices = generate_data_list('G7B8G2_GSK', 30)
 data_nl = nl.util.userinput.make_TaggedSet(data_list_G2_30s)
 
 ## enter parameters and build model
-L = 16
-k = 5.94
-D = 0.00884
-L_looped = 0.348
+L = 7
+k = 1.14
+D = 0.00387
+L_looped = 0.152
 
 w = np.zeros(3*L+1)
 w[L] = -1
@@ -92,7 +92,7 @@ with Pool(chunk_size) as p:
 
         rows = row_indices[chunk_start:chunk_end]  # in the all_tracks dataframe
         all_tracks_with_profiles.loc[rows, 'profile'] = chunk_profiles
-        all_tracks_with_profiles.to_csv('all_tracks_with_profiles.csv')  # save results
+        all_tracks_with_profiles.to_csv('all_tracks_with_profiles_L_7.csv')  # save results
 
         s = ''
         for profile in all_tracks_with_profiles.loc[row_indices[:chunk_end]]['profile']:

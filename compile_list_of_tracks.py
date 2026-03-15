@@ -109,10 +109,12 @@ for delta_t in [5, 30]:
         
         for file_path in (folders_path_obj / folder_name).iterdir():
             file_path_str = str(file_path)
+            file_path_list = file_path_str.split('/')
+            name = f'{file_path_list[-2]}_{file_path_list[-1][:-4]}'
             track_len = len(pd.read_csv(file_path_str))
-            all_tracks.append([date, delta_t, condition_name, file_path_str, track_len])
+            all_tracks.append([date, delta_t, condition_name, file_path_str, name, track_len])
 
-all_tracks = pd.DataFrame(all_tracks, columns=['date','delta_t','condition','path','track_len'])
+all_tracks = pd.DataFrame(all_tracks, columns=['date','delta_t','condition','path','name','track_len'])
 
 all_tracks.to_csv('all_tracks.csv')
 

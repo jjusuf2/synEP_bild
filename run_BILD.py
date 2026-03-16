@@ -7,6 +7,8 @@ from datetime import datetime
 import argparse
 from pathlib import Path
 import sys
+import time
+import os
 
 ## Parse arguments
 
@@ -122,7 +124,10 @@ def generate_data_list(condition, delta_t):
 
 data_list, row_indices = generate_data_list(condition_name, delta_t)
 
-save_folder = Path(f'/mnt/md0/jjusuf/bild/final_profiles_20250310/{condition_name}_{delta_t}s_{run_number}')
+if run_number is None:
+    save_folder = Path(f'/mnt/md0/jjusuf/bild/final_profiles_20250310/{condition_name}_{delta_t}s')
+else:
+    save_folder = Path(f'/mnt/md0/jjusuf/bild/final_profiles_20250310/{condition_name}_{delta_t}s_{run_number}')
 save_folder.mkdir(parents=True, exist_ok=True)
 
 # save metadata file
@@ -136,23 +141,28 @@ w = np.zeros(3*L+1)
 w[L] = -1
 w[2*L] = 1
 
-model = bild.models.MultiStateRouse(3*L+1, D, k,
-                                    looppositions = [None, (L, 2*L, 1/L_looped)],
-                                    measurement = w,
-                                    localization_error = localization_error*np.sqrt(2),
-                                   )
-
 ## run BILD (with multiprocessing)
 
 def calculate_and_save_BILD_result(args):
-    traj_array, name, model = args
+    # initiate model every time
+    model = bild.models.MultiStateRouse(3*L+1, D, k,
+                                        looppositions = [None, (L, 2*L, 1/L_looped)],
+                                        measurement = w,
+                                        localization_error = localization_error*np.sqrt(2),
+                                       )
+
+    traj_array, name = args
     traj = nl.Trajectory(traj_array)
 
     try:
+        np.random.seed((int(time.time()*1e6) ^ os.getpid()) % (2**32))  # use a different random seed every time
+        rng = np.random.get_state()[1][0]  # get RNG state to print later (for diagnostic purposes)
+
+        # now run BILD
         result = bild.sample(traj, model, show_progress=False)
         best_profile = result.best_profile()
         profile_str = "".join(map(str, best_profile))
-        print(f'   {name}  {str(np.sum(best_profile)):>3s} /{str(len(best_profile)):>3s} timepoints looped (mean {np.mean(best_profile)*100:.1f}%)')
+        print(f'   [RNG {rng}] {name} {str(np.sum(best_profile)):>3s} /{str(len(best_profile)):>3s} timepoints looped ({np.mean(best_profile)*100:.1f}%)')
     except:
         profile_str = ""
         print('   trajectory failed')
@@ -168,6 +178,6 @@ with Pool(nproc) as p:
         chunk_start = i*chunk_size
         chunk_end = min((i+1)*chunk_size, len(data_list))
         indices_in_chunk = np.arange(chunk_start, chunk_end)
-        inputs = [(data_list[j], all_tracks.loc[row_indices[j], 'name'], model) for j in indices_in_chunk]
+        inputs = [(data_list[j], all_tracks.loc[row_indices[j], 'name']) for j in indices_in_chunk]
 
         chunk_profiles = p.map(calculate_and_save_BILD_result, inputs)

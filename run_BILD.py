@@ -70,6 +70,13 @@ parser.add_argument(
     help="Number of threads for multiprocessing"
 )
 
+parser.add_argument(
+    "--run_number",
+    type=int,
+    required=False,
+    help="Option to include a run number in the name, if have multiple BILD runs"
+)
+
 args = parser.parse_args()
 
 # Access values
@@ -82,6 +89,7 @@ L_looped = args.L_looped
 loc_error = args.loc_error
 localization_error = np.array(loc_error.split(',')).astype('float')  # turn into a numpy array
 nproc = args.nproc
+run_number = args.run_number
 
 ## load the tracks
 all_tracks = pd.read_csv('/mnt/md0/jjusuf/bild/synEP_bild/all_tracks.csv')
@@ -114,7 +122,7 @@ def generate_data_list(condition, delta_t):
 
 data_list, row_indices = generate_data_list(condition_name, delta_t)
 
-save_folder = Path(f'/mnt/md0/jjusuf/bild/final_profiles_20250310/{condition_name}_{delta_t}s')
+save_folder = Path(f'/mnt/md0/jjusuf/bild/final_profiles_20250310/{condition_name}_{delta_t}s_{run_number}')
 save_folder.mkdir(parents=True, exist_ok=True)
 
 # save metadata file

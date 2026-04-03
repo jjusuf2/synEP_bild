@@ -83,6 +83,7 @@ for name in joint_fit.fits_dict:
 
 result = joint_fit.run(show_progress=True)
 
+print()
 print(f'Results of joint fit for {condition_name}:')
 for key in ['5s log(σ²) (dim 0)','5s log(σ²) (dim 2)',
             '30s log(σ²) (dim 0)','30s log(σ²) (dim 2)',
@@ -91,3 +92,5 @@ for key in ['5s log(σ²) (dim 0)','5s log(σ²) (dim 2)',
     key_without_log = key_without_log.replace('log(J)','J')
     key_without_log = key_without_log.replace('log(Γ)','Γ')
     print(f'{key_without_log:<14} = {np.exp(result["params"][key]):.3}')
+
+pd.Series(result['params']).to_csv(f'params_joint_fit_{condition_name}.csv')

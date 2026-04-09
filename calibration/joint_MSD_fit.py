@@ -50,10 +50,11 @@ for arr in traj_arrays:
 #   https://github.com/ahansenlab/chromatin_dynamics/blob/main/03_fitting/01_01_fit_MEF.ipynb
 
 fit_30s = bayesmsd.lib.TwoLocusRouseFit(data_30s)
-fit_30s.parameters['log(σ²) (dim 1)'].fix_to = 'log(σ²) (dim 0)'
-
 fit_5s = bayesmsd.lib.TwoLocusRouseFit(data_5s)
-fit_5s.parameters['log(σ²) (dim 1)'].fix_to = 'log(σ²) (dim 0)'
+
+# for lattice, don't fix sigma_x = sigma_y
+# fit_30s.parameters['log(σ²) (dim 1)'].fix_to = 'log(σ²) (dim 0)'
+# fit_5s.parameters['log(σ²) (dim 1)'].fix_to = 'log(σ²) (dim 0)'
 
 ## now set up the joint fit
 
@@ -85,8 +86,8 @@ result = joint_fit.run(show_progress=True)
 
 print()
 print(f'Results of joint fit for {condition_name}:')
-for key in ['5s log(σ²) (dim 0)','5s log(σ²) (dim 2)',
-            '30s log(σ²) (dim 0)','30s log(σ²) (dim 2)',
+for key in ['5s log(σ²) (dim 0)','5s log(σ²) (dim 1)','5s log(σ²) (dim 2)',
+            '30s log(σ²) (dim 0)','5s log(σ²) (dim 1)','30s log(σ²) (dim 2)',
             'log(Γ)','log(J)']:
     key_without_log = key.replace('log(σ²)','σ²')
     key_without_log = key_without_log.replace('log(J)','J')

@@ -86,6 +86,14 @@ parser.add_argument(
     help="Option to include a run number in the name, if have multiple BILD runs"
 )
 
+parser.add_argument(
+    "--min_track_length",
+    type=int,
+    default=0,
+    required=False,
+    help="Minimum track length to analyze, in frames"
+)
+
 args = parser.parse_args()
 
 # Access values
@@ -99,6 +107,7 @@ loc_error = args.loc_error
 localization_error = np.array(loc_error.split(',')).astype('float')  # turn into a numpy array
 traj_length_frames = args.traj_length
 nproc = args.nproc
+min_track_length = args.min_track_length
 run_number = args.run_number
 
 ## load the tracks
@@ -108,7 +117,8 @@ all_tracks = pd.read_csv('/mnt/md0/jjusuf/bild/synEP_bild/all_tracks.csv')
 def generate_data_list(condition, delta_t):
     rows = all_tracks.loc[
         (all_tracks['condition']==condition) &
-        (all_tracks['delta_t']==delta_t)
+        (all_tracks['delta_t']==delta_t) &
+        (all_tracks['track_len']>min_track_length)
     ]
 
     data_list = []
@@ -167,6 +177,8 @@ w[2*L] = 1
 
 ## run BILD (with multiprocessing)
 
+dE_arr = [0, 1, 2, 5, 10]
+
 def calculate_and_save_BILD_result(args):
     # initiate model every time
     model = bild.models.MultiStateRouse(3*L+1, D, k,
@@ -184,14 +196,15 @@ def calculate_and_save_BILD_result(args):
 
         # now run BILD
         result = bild.sample(traj, model, show_progress=False)
-        best_profile = result.best_profile()
-        profile_str = "".join(map(str, best_profile))
-        print(f'   [RNG {rng}] {name} {str(np.sum(best_profile)):>3s} /{str(len(best_profile)):>3s} timepoints looped ({np.mean(best_profile)*100:.1f}%)')
+        for dE in dE_arr:
+            best_profile = result.best_profile(dE=dE)
+            profile_str = "".join(map(str, best_profile))
+            with open(f'{save_folder}/{name}_dE_{dE}_profile.txt', 'w') as f:
+                f.write(profile_str)
+        #print(f'   [RNG {rng}] {name} {str(np.sum(best_profile)):>3s} /{str(len(best_profile)):>3s} timepoints looped ({np.mean(best_profile)*100:.1f}%)')
     except:
         profile_str = ""
         print('   trajectory failed')
-    with open(f'{save_folder}/{name}_track.txt', 'w') as f:
-        f.write(profile_str)
 
 chunk_size = nproc
 num_chunks = int(np.ceil(len(data_list_chopped) / chunk_size))

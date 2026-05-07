@@ -150,7 +150,7 @@ for i in range(len(data_list)):
     trajectory_data = data_list[i]
     name = all_tracks.loc[row_indices[i], 'name']
     num_segments_to_split_into = int(np.floor(len(trajectory_data) / traj_length_frames))
-    if num_segments_to_split_into > 1:
+    if num_segments_to_split_into >= 1:
         for n in range(num_segments_to_split_into):
             segment_start_index = n*traj_length_frames
             segment_end_index = (n+1)*traj_length_frames
@@ -195,7 +195,7 @@ def calculate_and_save_BILD_result(args):
         result = bild.sample(traj, model, show_progress=False)
         with open(f'{save_folder}/{name}_bild_result.pkl', "wb") as f:
             pickle.dump(result, f)
-        print(f'   [RNG {rng}] {name} saved (traj_len={len(traj)}, k={list(result.k)})', flush=True)
+        print(f'   [RNG {rng}] {name} done', flush=True)
     except:
         profile_str = ""
         print('   trajectory failed')

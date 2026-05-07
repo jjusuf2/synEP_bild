@@ -56,6 +56,9 @@ results/
 *.hdf5
 *.npz
 
+# Simulation pipeline outputs (synEP_bild/simulation/main.py writes here)
+simulation_data/
+
 # Matplotlib cache
 .matplotlib/
 

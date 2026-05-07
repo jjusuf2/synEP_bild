@@ -15,6 +15,15 @@ Layout under DATA_ROOT:
     trajectories/<label>/metadata.txt
     bild_results/<label>/chunk_<L>fr/bild_result_<i>.pkl
 """
+# Pin BLAS backends to a single thread per process so the multiprocessing
+# Pool below doesn't explode into nproc * BLAS-threads workers contending
+# for cores. Must be set before numpy / scipy / bild are imported.
+# `setdefault` lets the user override from the shell if they want.
+import os
+for _v in ('OMP_NUM_THREADS', 'MKL_NUM_THREADS', 'OPENBLAS_NUM_THREADS',
+           'NUMEXPR_NUM_THREADS', 'VECLIB_MAXIMUM_THREADS', 'BLIS_NUM_THREADS'):
+    os.environ.setdefault(_v, '1')
+
 import argparse
 from datetime import datetime
 from pathlib import Path

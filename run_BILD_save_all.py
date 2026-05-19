@@ -176,6 +176,7 @@ with Pool(nproc) as p:
         chunk_start = i*chunk_size
         chunk_end = min((i+1)*chunk_size, len(data_list))
         indices_in_chunk = np.arange(chunk_start, chunk_end)
-        inputs = [(data_list[j], all_tracks.loc[row_indices[j], 'name']) for j in indices_in_chunk]
+        inputs = [(data_list[j], all_tracks.
+                   loc[row_indices[j], 'name']) for j in indices_in_chunk]
 
         chunk_profiles = p.map(calculate_and_save_BILD_result, inputs)

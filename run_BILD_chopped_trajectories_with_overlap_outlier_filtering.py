@@ -87,6 +87,8 @@ def main():
     print(f'Loading tracks for condition={CONDITION_NAME}, delta_t={delta_t}s ...')
 
     data = np.load(f'/mnt/md0/jjusuf/bild/20260519_Henrik_filtered_data/{delta_t}s_340kb_Ce_Cp_None.npy')
+    data = data/1000  # convert to µm
+
     data_list = list(data)
     for i in range(len(data_list)):
         traj = data_list[i]

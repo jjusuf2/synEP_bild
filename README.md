@@ -1,5 +1,7 @@
 # Running BILD on synEP data
 
+README outdated, will be updated soon!
+
 ## Environment
 * python 3.9.23
 * bild 0.0.5

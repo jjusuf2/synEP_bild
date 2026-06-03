@@ -50,8 +50,7 @@ Thumbs.db
 htmlcov/
 
 # Large data files (optional — adjust as needed)
-data/
-results/
+bild_outputs/
 *.h5
 *.hdf5
 *.npz

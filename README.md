@@ -16,20 +16,12 @@ The folder `data_processing` contains scripts to process and filter the data.
 **Filtered tracks:** The second part of the script `load_and_filter_tracks.py` takes the unfiltered tracks, performs outlier filtering, and saves the results in the same `.npz` format, stored in `data_consolidated_npz/filtered_data`.
 
 ## Calibrate BILD
-We calibrate the BILD model on the 340kb synEP loop using the scripts `calibration/run_BILD_calibration_5s.py` and `calibration/run_BILD_calibration_30s.py` for ∆t = 5 and 30 seconds respectively. These scripts use S+V-A6B8 (actually ∆CTCF-sites) as the ∆CTCF condition and G2 ∆RAD21 as the ∆RAD21 condition.
+The script `run_calibration.py` performs MSD fitting to calibrate the underlying Rouse model parameters (this differs from other MSD fits in the manuscript, as $\alpha$ is fixed at 0.5 for BILD). We use the S+V-A6B8 (∆CTCFsites) condition as the unlooped state and rescale the parameters of the G2 ∆RAD21 condition to obtain the looped state. This script also plots the raw MSDs.
+
+The script `view_calibration_results.py` calculates the BILD model parameters ($L$, $L_\text{looped}$, $k$, and $D$) from the Rouse model parameters ($\Gamma$, $J$, and localization error for each condition). It also plots the localization error-corrected experimental MSDs overlaid with the MSDs of the model's looped and unloooped states.
 
 ## Run BILD
-Use the script `run_BILD.py` to run BILD. Input the parameters from the calibration as arguments. For `--loc_error`, make sure to input the single-spot localization error for the tracks you are running the inference on (get from MSD fitting).
+The script `run_bild.py` runs BILD on the trajectory data.
 
-Example usage:
-
-```python run_BILD.py --condition_name G7B8G2_GSK --delta_t 30 --L 16 --k 5.94 --D 0.00884 --L_looped 0.348 --loc_error 0.047,0.046,0.046 --nproc 4```
-
-```python run_BILD.py --condition_name G7B8G2_GSK --delta_t 5 --L 16 --k 1.67 --D 0.00239 --L_looped 0.297 --loc_error 0.044,0.040,0.044 --nproc 4```
-
-## Localization error
-To get the localization error needed to run BILD, use `get_loc_error.py`. This will report the single-spot localization error in x, y, and z.
-
-Example usage:
-
-```python get_loc_error.py --condition_name 14A-A11E6_GSK --round --delta_t 30```
+```python run_bild.py --condition 340kb_Ce_Cp_None --nproc 12 --dE 2 --traj_len 100```
+```python run_bild.py --condition 340kb_Ce_Cp_IAA --nproc 12 --dE 2 --traj_len 100```

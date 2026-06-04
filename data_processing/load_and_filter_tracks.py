@@ -9,22 +9,20 @@ import pandas as pd
 from scipy.stats import chi2
 
 
-
 # PART 0. INPUT PARAMETERS
 # ------------------------
 
 tracks_csv_folder_5s = "/mnt/md1/jjusuf/synEP/export_qc_filtered_5s_WithCorrectedMS2_20260407"
 tracks_csv_folder_30s = "/mnt/md1/jjusuf/synEP/export_qc_filtered_30s_WithCorrectedMS2_20260407"
 
-tracks_npz_folder = "/mnt/md0/jjusuf/synEP/data_consolidated_numpy"
-filtered_tracks_npy_folder = "/mnt/md0/jjusuf/synEP/data_consolidated_numpy/filtered_data"
+tracks_npz_unfiltered_folder = "/mnt/md1/jjusuf/synEP/data_consolidated_npz/unfiltered_data"
+tracks_npz_filtered_folder = "/mnt/md1/jjusuf/synEP/data_consolidated_npz/filtered_data"
 
 significance_level = 1e-7  # for filtering (in last cell)
 
 
-
-# PART 1: PROCESS DATA
-# --------------------
+# PART 1. LOAD TRACKING DATA (.csv) AND EXPORT INTO NUMPY FORMAT (.npz)
+# --------------------------------------------------------------------
 
 data_folders = {
     "5s": tracks_csv_folder_5s,
@@ -32,10 +30,10 @@ data_folders = {
 }
 
 # make output folders if they don't exist yet
-Path(tracks_npz_folder).mkdir(parents=True, exist_ok=True)
-Path(filtered_tracks_npy_folder).mkdir(parents=True, exist_ok=True)
+Path(tracks_npz_unfiltered_folder).mkdir(parents=True, exist_ok=True)
+Path(tracks_npz_filtered_folder).mkdir(parents=True, exist_ok=True)
 
-output_dir = (tracks_npz_folder)
+output_dir = (tracks_npz_unfiltered_folder)
 
 cell_type_synonyms = {
     "G7B8G2": ["G7B8G2_"],
@@ -112,13 +110,15 @@ def load_csvs_in_folders(folders):
 
     # Keep only the last two path components of the file column.
     df["file"] = file.str.extract(r"([^/\\]+[/\\][^/\\]+)$")[0]
-    
+
     return df
+
 
 # Group folders according to (framerate, cell line, treatment).
 folder_groups = defaultdict(list)
 
-print(f"Loading all localizations into a merged DataFrame:")
+print(f"Loading all localizations into merged DataFrame:")
+
 for framerate, root in data_folders.items():
     for folder in sorted(os.listdir(root)):
         cell_type = next(
@@ -140,7 +140,7 @@ for framerate, root in data_folders.items():
 
         key = (framerate, common_names[cell_type], treatment)
         folder_groups[key].append(os.path.join(root, folder))
-        
+
 frames = []
 for (framerate, cell_type, treatment), folders in tqdm(folder_groups.items()):
     frame = load_csvs_in_folders(folders)
@@ -151,6 +151,7 @@ for (framerate, cell_type, treatment), folders in tqdm(folder_groups.items()):
 
 merged_df = pd.concat(frames, ignore_index=True)
 print(f"Successfully loaded {len(merged_df)} rows across {len(frames)} conditions\n")
+
 
 def nanpad(times, series):
     """Place each track's ragged values at their integer time index.
@@ -177,12 +178,12 @@ def nanpad(times, series):
 TRACK_KEYS = ["cell", "allele", "replicate", "date", "folder"]
 os.makedirs(output_dir, exist_ok=True)
 
-print(f"Saving results as .npz files in {tracks_npz_folder}")
+print(f"Saving results as .npz files in {tracks_npz_unfiltered_folder}")
 
 for (framerate, cell_type, treatment), group in merged_df.groupby(
     ["framerate", "cell type", "treatment"], sort=False
 ):
-    
+
     group = group.copy()
     # Derived per-row columns (computed before the per-track aggregation).
     group["t"] = group["frame"] - group.groupby(TRACK_KEYS)["frame"].transform("min")
@@ -201,7 +202,7 @@ for (framerate, cell_type, treatment), group in merged_df.groupby(
     ).reset_index()
 
     times = [[int(v) for v in row] for row in tracks["t"]]
-    ts_pad, (ints_pad, bgs_pad) = nanpad(
+    _, (ints_pad, bgs_pad) = nanpad(
         times, [tracks["intensity"].tolist(), tracks["background"].tolist()]
     )
     _, (xs_pad, ys_pad, zs_pad) = nanpad(
@@ -228,15 +229,13 @@ for (framerate, cell_type, treatment), group in merged_df.groupby(
         dataset=dataset,
         intensity=ints_pad,
         background=bgs_pad,
-        ts_MS2=ts_pad,
-        ts_pad_position=ts_pad,
         identifiers=identifiers,
     )
 print()
 
 
-# PART 2: FILTERING
-# -----------------
+# PART 2. FILTER TRACKS
+# ---------------------
 
 def filter_out_extreme_pos(data, mu=None, sig=None, significance_level=0.01):
     """Fits a gaussian to the data and filters the output by z-score under the fitted gaussian
@@ -342,16 +341,17 @@ def filter_inconsistent_trajectories(ep_dat, mu, sig, significance_level=0.01):
 
     return filtered, rv, rv_filtered, removed
 
-datapaths = [d for d in os.listdir(tracks_npz_folder) if d.endswith(".npz")]
+
+datapaths = [d for d in os.listdir(tracks_npz_unfiltered_folder) if d.endswith(".npz")]
 
 print(f"Performing filtering with significance level {significance_level}")
-print(f"Saving results as .npy files in {filtered_tracks_npy_folder}")
+print(f"Saving results as .npz files in {tracks_npz_filtered_folder}\n")
 
 num_localizations_removed_cumulative = 0
 num_localizations_total_cumulative = 0
 
 for datapath in datapaths:
-    p = os.path.join(tracks_npz_folder, datapath)
+    p = os.path.join(tracks_npz_unfiltered_folder, datapath)
     d = np.load(p, allow_pickle=True)
     ep_res = d["dataset"]
 
@@ -361,16 +361,31 @@ for datapath in datapaths:
         ep_res, mu=m, sig=s, significance_level=significance_level
     )
 
+    # Propagate the localizations removed from ``dataset`` (mask ``removed``,
+    # shape (n_tracks, n_t)) into the intensity / background channels so every
+    # field shares the same NaN mask as the filtered dataset.
+    intensity = d["intensity"].copy()
+    intensity[removed] = np.nan  # propagate filtering
+    background = d["background"].copy()
+    background[removed] = np.nan  # propagate filtering
+    identifiers = d["identifiers"].copy()  # do nothing
+
     num_localizations_removed = np.sum(removed)
     num_localizations_total = np.sum(~np.isnan(ep_res[:,:,0]))
-    pct = num_localizations_removed / num_localizations_total 
-    print(f"{datapath:<40} {num_localizations_removed} of {num_localizations_total} ({pct:.2%}) locs removed")
+    pct = num_localizations_removed / num_localizations_total
 
     num_localizations_removed_cumulative += num_localizations_removed
     num_localizations_total_cumulative += num_localizations_total
 
-    #store as filtered_data
-    np.save(f"{filtered_tracks_npy_folder}/{datapath}".strip(".npz"), filtered)
+    np.savez_compressed(
+        f"{tracks_npz_filtered_folder}/{datapath}",
+        dataset=filtered,
+        intensity=intensity,
+        background=background,
+        identifiers=identifiers,
+    )
 
-pct = num_localizations_removed_cumulative / num_localizations_total_cumulative 
+    print(f"{datapath:<35} {num_localizations_removed} of {num_localizations_total} ({pct:.2%}) locs removed")
+
+pct = num_localizations_removed_cumulative / num_localizations_total_cumulative
 print(f"In total, {num_localizations_removed_cumulative} of {num_localizations_total_cumulative} ({pct:.2%}) locs were removed.")

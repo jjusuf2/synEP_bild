@@ -1,5 +1,6 @@
 import os
 import glob
+from pathlib import Path
 from collections import defaultdict
 from tqdm import tqdm
 
@@ -29,6 +30,10 @@ data_folders = {
     "5s": tracks_csv_folder_5s,
     "30s": tracks_csv_folder_30s,
 }
+
+# make output folders if they don't exist yet
+Path(tracks_npz_folder).mkdir(parents=True, exist_ok=True)
+Path(filtered_tracks_npy_folder).mkdir(parents=True, exist_ok=True)
 
 output_dir = (tracks_npz_folder)
 

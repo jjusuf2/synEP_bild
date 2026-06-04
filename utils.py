@@ -2,7 +2,9 @@ import numpy as np
 import noctiluca as nl
 
 def get_trajs(dt, condition):
-    all_trajs = np.load(f'data/{dt}s_{condition}.npy')
+    """Open trajectory data (xyz separation between E and P) and construct a list of numpy arrays,
+    one array per trajectory"""
+    all_trajs = np.load(f'/mnt/md1/jjusuf/synEP/data_consolidated_npz/filtered_data/{dt}s_{condition}.npz')['dataset']
     trajs = []
     for track_idx in range(len(all_trajs)):
         traj = all_trajs[track_idx,:,:]
@@ -22,21 +24,24 @@ def downsample_trajs(trajs, sample_every):
     return trajs_downsampled
 
 def get_original_downsampled_trajs(condition, min_traj_len=50, print_output=True):
+    """Get the original 30s trajectories and downsampled 5s trajectories in noctiluca TaggedSet format"""
 
     original_trajs = get_trajs(30, condition)
+    n_original_loaded = len(original_trajs)
     original_trajs = [traj for traj in original_trajs if len(traj)>min_traj_len]
     original_trajs_hrs = np.sum([len(traj) for traj in original_trajs])*30/60/60
 
     downsampled_trajs = downsample_trajs(get_trajs(5, condition), 6)
+    n_downsampled_loaded = len(downsampled_trajs)
     downsampled_trajs = [traj for traj in downsampled_trajs if len(traj)>min_traj_len]
     downsampled_trajs_hours = np.sum([len(traj) for traj in downsampled_trajs])*30/60/60
 
     if print_output:
         print(f'Condition name: {condition}')
-        print(f'Loaded {len(original_trajs)} trajectories with ∆t=30s')
+        print(f'Loaded {n_original_loaded} trajectories with ∆t=30s')
         print(f'  ↳ filtered to {len(original_trajs)} trajectories with ≥{min_traj_len} frames')
         print(f'    ({original_trajs_hrs:.0f} hours total)')
-        print(f'Loaded {len(downsampled_trajs)} trajectories with ∆t=5s and downsampled')
+        print(f'Loaded {n_downsampled_loaded} trajectories with ∆t=5s and downsampled')
         print(f'  ↳ filtered to {len(downsampled_trajs)} trajectories with ≥{min_traj_len} frames')
         print(f'    ({downsampled_trajs_hours:.0f} hours total)')
         print()
@@ -58,21 +63,24 @@ def get_original_downsampled_trajs(condition, min_traj_len=50, print_output=True
     return original_trajs_nl, downsampled_trajs_nl
 
 def get_30s_5s_trajs(condition, min_traj_len=50, print_output=True):
+    """Get the 30s and 5s trajectories (no downsampling performed) in noctiluca TaggedSet format"""
 
     trajs_30s = get_trajs(30, condition)
+    n_30s_loaded = len(trajs_30s)
     trajs_30s = [traj for traj in trajs_30s if len(traj)>min_traj_len]
     trajs_30s_hrs = np.sum([len(traj) for traj in trajs_30s])*30/60/60
 
     trajs_5s = get_trajs(5, condition)
+    n_5s_loaded = len(trajs_5s)
     trajs_5s = [traj for traj in trajs_5s if len(traj)>min_traj_len]
     trajs_5s_hrs = np.sum([len(traj) for traj in trajs_5s])*30/60/60
 
     if print_output:
         print(f'Condition name: {condition}')
-        print(f'Loaded {len(trajs_30s)} trajectories with ∆t=30s')
+        print(f'Loaded {n_30s_loaded} trajectories with ∆t=30s')
         print(f'  ↳ filtered to {len(trajs_30s)} trajectories with ≥{min_traj_len} frames')
         print(f'    ({trajs_30s_hrs:.0f} hours total)')
-        print(f'Loaded {len(trajs_5s)} trajectories with ∆t=5s and downsampled')
+        print(f'Loaded {n_5s_loaded} trajectories with ∆t=5s')
         print(f'  ↳ filtered to {len(trajs_5s)} trajectories with ≥{min_traj_len} frames')
         print(f'    ({trajs_5s_hrs:.0f} hours total)')
         print()

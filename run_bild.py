@@ -44,8 +44,18 @@ def _run_one(args):
         )
         traj = nl.Trajectory(chunk_array)
         result = bild.sample(traj, model, dE=dE, show_progress=False)
-        with open(save_path, 'wb') as f:
-            pickle.dump(result, f)
+        # Write to a temp file then atomically rename, so a killed/crashing
+        # worker can never leave a 0-byte or truncated .pkl under the real name.
+        tmp_path = save_path.with_suffix('.pkl.tmp')
+        try:
+            with open(tmp_path, 'wb') as f:
+                pickle.dump(result, f)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, save_path)
+        except BaseException:
+            tmp_path.unlink(missing_ok=True)
+            raise
         return save_path.name, f'done (RNG {rng_id})'
     except Exception as e:
         return save_path.name, f'failed: {type(e).__name__}: {e}'
@@ -74,7 +84,7 @@ def main():
     all_params = {}
     conditions = ['340kb_Ce_Cp_None','340kb_Ce_Cp_IAA','340kb_None']
     for condition_temp in conditions:
-        with open(f'output/fit_params/{condition_temp}_fit_params.pkl', 'rb') as f:
+        with open(f'bild_outputs/fit_params/{condition_temp}_fit_params.pkl', 'rb') as f:
             all_params[condition_temp] = pickle.load(f)
 
     G = np.exp(all_params['340kb_None']['log(Γ)'])
@@ -114,7 +124,7 @@ def main():
     track_names_original = [f'original_track_{n}' for n in range(len(data_list_original))]
     track_names_downsampled = [f'downsampled_track_{n}' for n in range(len(data_list_downsampled))]
     
-    save_dir = Path(f'output/bild_profiles/{condition}_initial_dE_{dE}')
+    save_dir = Path(f'bild_outputs/bild_profiles/{condition}_initial_dE_{dE}')
     save_dir.mkdir(parents=True, exist_ok=True)
 
     step = traj_len // 2
@@ -150,6 +160,13 @@ def main():
                 tqdm.write(f'{name}: {status}')
                 bar.set_postfix(failed=failures)
             bar.update(1)
+
+    # Sweep any temp files left by workers that were killed mid-write.
+    leftover_tmps = list(save_dir.glob('*.pkl.tmp'))
+    for tmp in leftover_tmps:
+        tmp.unlink(missing_ok=True)
+    if leftover_tmps:
+        print(f'Removed {len(leftover_tmps)} leftover .tmp file(s).')
 
     print(f'Done. {failures} failures out of {len(work_items)} sub-trajectories.')
 

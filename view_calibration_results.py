@@ -22,7 +22,7 @@ def get_MSD_plateau(dataset):
 all_params = {}
 conditions = ['340kb_Ce_Cp_None','340kb_Ce_Cp_IAA','340kb_None']
 for condition in conditions:
-    with open(f'output/fit_params/{condition}_fit_params.pkl', 'rb') as f:
+    with open(f'bild_outputs/fit_params/{condition}_fit_params.pkl', 'rb') as f:
         all_params[condition] = pickle.load(f)
 
 G = np.exp(all_params['340kb_None']['log(Γ)'])
@@ -65,16 +65,17 @@ colors = ['C0', 'C3', 'C4']
 
 # load the data
 all_data = {}
-for condition in conditions:
-    original_trajs_nl, downsampled_trajs_nl = get_original_downsampled_trajs(condition, min_traj_len=100, print_output=False)
+
+for condition in ['340kb_Ce_Cp_None', '340kb_None', '340kb_Ce_Cp_IAA']:
+    trajs_30s_nl, trajs_5s_nl = get_30s_5s_trajs(condition, min_traj_len=100, print_output=False)
     all_data[condition] = {}
-    all_data[condition]['original'] = original_trajs_nl
-    all_data[condition]['downsampled'] = downsampled_trajs_nl
+    all_data[condition]['30s'] = trajs_30s_nl
+    all_data[condition]['5s'] = trajs_5s_nl
 
 sigma2_dict = {}
 for condition in conditions:
     sigma2_dict[condition] = {}
-    for data_source, dt in zip(['original', 'downsampled'], [30, 5]):
+    for data_source, dt in zip(['30s', '5s'], [30, 5]):
         sigma2_dict[condition][data_source] = np.sum([np.exp(all_params[condition][f'{dt}s log(σ²) (dim {k})']) for k in (0,1,2)])
 
 # plot error-corrected MSDs
@@ -87,45 +88,45 @@ w[2*L] = 1          # the observable generated from a conformation x is the scal
                     # the vector monomer[j] - monomer[i]
 
 for condition, color in zip(conditions, colors):
-    original_msd = nl.analysis.MSD(all_data[condition]['original']) - 2*sigma2_dict[condition]['original']
-    downsampled_msd = nl.analysis.MSD(all_data[condition]['downsampled']) - 2*sigma2_dict[condition]['downsampled']
-    ax.plot(30*np.arange(len(original_msd)), original_msd, color=color, label=condition)
-    ax.plot(30*np.arange(len(downsampled_msd)), downsampled_msd, color=color, linestyle='--')
-    ax.axhline(get_MSD_plateau(all_data[condition]['original']) - 2*sigma2_dict[condition]['original'], 0, 1, color=color)
-    ax.axhline(get_MSD_plateau(all_data[condition]['downsampled']) - 2*sigma2_dict[condition]['downsampled'], 0, 1, color=color, linestyle='--')
+    msd_30s = nl.analysis.MSD(all_data[condition]['30s']) - 2*sigma2_dict[condition]['30s']
+    msd_5s = nl.analysis.MSD(all_data[condition]['5s']) - 2*sigma2_dict[condition]['5s']
+    ax.plot(30*np.arange(1,len(msd_30s)), msd_30s[1:], color=color, label=condition)
+    ax.plot(5*np.arange(1,len(msd_5s)), msd_5s[1:], color=color, linestyle='--')
+    ax.axhline(get_MSD_plateau(all_data[condition]['30s']) - 2*sigma2_dict[condition]['30s'], 0, 1, color=color)
+    ax.axhline(get_MSD_plateau(all_data[condition]['5s']) - 2*sigma2_dict[condition]['5s'], 0, 1, color=color, linestyle='--')
 
-model_original = bild.models.MultiStateRouse(3*L+1, D_frames, k_frames,
+model_30s = bild.models.MultiStateRouse(3*L+1, D_frames, k_frames,
                                             looppositions = [None, (L, 2*L, 1/L_looped)],       # define "states" (here: 0=unlooped, 1=looped)
                                             measurement = w,
                                             localization_error = np.sqrt(2)*np.array([43.05,41.00,44.32])/1e3, # convert error back to distance
                                         )
 
-model_downsampled = bild.models.MultiStateRouse(3*L+1, D_frames, k_frames,
+model_5s = bild.models.MultiStateRouse(3*L+1, D_frames, k_frames,
                                             looppositions = [None, (L, 2*L, 1/L_looped)],       # define "states" (here: 0=unlooped, 1=looped)
                                             measurement = w,
                                             localization_error = np.sqrt(2)*np.array([44.46,40.41,43.52])/1e3, # convert error back to distance
                                         )
 
 t_range_frames = np.arange(1, 500)
-state_model = model_original.models[0]
-msd = state_model.MSD(t_range_frames, w=model_original.measurement)
+state_model = model_30s.models[0]
+msd = state_model.MSD(t_range_frames, w=model_30s.measurement)
 ax.plot(30*t_range_frames, msd, color='#444444', label='model state 0')
-ax.axhline(state_model.MSD(np.inf, w=model_original.measurement), 0, 1, color='#444444')
+ax.axhline(state_model.MSD(np.inf, w=model_30s.measurement), 0, 1, color='#444444')
 
-state_model = model_original.models[1]
-msd = state_model.MSD(t_range_frames, w=model_original.measurement)
+state_model = model_30s.models[1]
+msd = state_model.MSD(t_range_frames, w=model_30s.measurement)
 ax.plot(30*t_range_frames, msd, color='#bbbbbb', label='model state 1')
-ax.axhline(state_model.MSD(np.inf, w=model_original.measurement), 0, 1, color='#bbbbbb')
+ax.axhline(state_model.MSD(np.inf, w=model_30s.measurement), 0, 1, color='#bbbbbb')
 
-# state_model = model_downsampled.models[0]
-# msd = state_model.MSD(t_range_frames, w=model_downsampled.measurement)
+# state_model = model_5s.models[0]
+# msd = state_model.MSD(t_range_frames, w=model_5s.measurement)
 # ax.plot(30*t_range_frames, msd, color='#444444', label='model state 0', linestyle='--')
-# ax.axhline(state_model.MSD(np.inf, w=model_downsampled.measurement), 0, 1, color='#444444', linestyle='--')
+# ax.axhline(state_model.MSD(np.inf, w=model_5s.measurement), 0, 1, color='#444444', linestyle='--')
 
-# state_model = model_downsampled.models[1]
-# msd = state_model.MSD(t_range_frames, w=model_downsampled.measurement)
+# state_model = model_5s.models[1]
+# msd = state_model.MSD(t_range_frames, w=model_5s.measurement)
 # ax.plot(30*t_range_frames, msd, color='#bbbbbb', label='model state 1', linestyle='--')
-# ax.axhline(state_model.MSD(np.inf, w=model_downsampled.measurement), 0, 1, color='#bbbbbb', linestyle='--')
+# ax.axhline(state_model.MSD(np.inf, w=model_5s.measurement), 0, 1, color='#bbbbbb', linestyle='--')
 
 ax.set_xscale('log')
 ax.set_yscale('log')
@@ -137,5 +138,5 @@ ax.legend(fontsize=8, loc='lower right')
 
 ax.set_title('')
 
-plt.savefig('output/figures/MSDs_loc_error_corrected_with_model.png');
-plt.savefig('output/figures/MSDs_loc_error_corrected_with_model.svg');
+plt.savefig('bild_outputs/figures/MSDs_loc_error_corrected_with_model.png');
+plt.savefig('bild_outputs/figures/MSDs_loc_error_corrected_with_model.svg');

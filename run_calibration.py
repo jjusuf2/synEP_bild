@@ -34,8 +34,8 @@ fig, ax = plt.subplots()
 for condition, color in zip(['340kb_Ce_Cp_IAA', '340kb_None', '340kb_Ce_Cp_None'], ['C4', 'C3', 'C0']):
     msd_30s = nl.analysis.MSD(all_data[condition]['30s'])
     msd_5s = nl.analysis.MSD(all_data[condition]['5s'])
-    ax.plot(30*np.arange(len(msd_30s)), msd_30s, color=color, label=condition)
-    ax.plot(5*np.arange(len(msd_5s)), msd_5s, color=color, linestyle='--')
+    ax.plot(30*np.arange(1,len(msd_30s)), msd_30s[1:], color=color, label=condition)
+    ax.plot(5*np.arange(1,len(msd_5s)), msd_5s[1:], color=color, linestyle='--')
     ax.axhline(get_MSD_plateau(all_data[condition]['30s']), 0, 1, color=color)
     ax.axhline(get_MSD_plateau(all_data[condition]['5s']), 0, 1, color=color, linestyle='--')
 
@@ -47,8 +47,8 @@ ax.set_xlabel('Lag time ∆t [s]')
 
 ax.legend(fontsize=8)
 
-plt.savefig('output/figures/MSDs_raw.png');
-plt.savefig('output/figures/MSDs_raw.svg');
+plt.savefig('bild_outputs/figures/MSDs_raw.png');
+plt.savefig('bild_outputs/figures/MSDs_raw.svg');
 
 for condition in ['340kb_Ce_Cp_None', '340kb_None', '340kb_Ce_Cp_IAA']:
 
@@ -95,5 +95,5 @@ for condition in ['340kb_Ce_Cp_None', '340kb_None', '340kb_Ce_Cp_IAA']:
     [print(f"{np.sqrt(np.exp(result['params'][f'5s log(σ²) (dim {d})']))*1000/np.sqrt(2):.2f}", end=' ') for d in (0, 1, 2)];
     print()
 
-    with open(f'output/fit_params/{condition}_fit_params.pkl', 'wb') as f:
+    with open(f'bild_outputs/fit_params/{condition}_fit_params.pkl', 'wb') as f:
         pickle.dump(result['params'], f)

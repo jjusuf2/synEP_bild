@@ -6,6 +6,17 @@ if file_path.is_file():
     import mpl_theme; mpl_theme.apply();
 import matplotlib.pyplot as plt
 
+plt.rcParams['font.family'] = 'Arial'
+plt.rcParams['font.size'] = 6
+plt.rcParams['xtick.major.width'] = 0.25
+plt.rcParams['ytick.major.width'] = 0.25
+plt.rcParams['xtick.minor.width'] = 0.25
+plt.rcParams['ytick.minor.width'] = 0.25
+plt.rcParams['axes.linewidth'] = 0.25
+plt.rcParams['lines.linewidth'] = 0.5
+plt.rcParams['axes.labelpad'] = 2
+plt.rcParams['svg.fonttype'] = 'none'
+
 import numpy as np
 import pandas as pd
 import bild
@@ -41,7 +52,7 @@ tether_length_looped_kb = 1.8
 dist_btwn_CTCF_sites_kb = 335
 
 # Looped state (from ΔRad21, with genomic rescaling)
-J_dRAD21 = J = np.exp(all_params['340kb_Ce_Cp_IAA']['log(J)'])
+J_dRAD21 = np.exp(all_params['340kb_Ce_Cp_IAA']['log(J)'])
 J_looped = tether_length_looped_kb/dist_btwn_CTCF_sites_kb * J_dRAD21
 L_looped = J_looped * k / D  # from Eq. 5.24 in Simon's thesis
 
@@ -79,7 +90,7 @@ for condition in conditions:
         sigma2_dict[condition][data_source] = np.sum([np.exp(all_params[condition][f'{dt}s log(σ²) (dim {k})']) for k in (0,1,2)])
 
 # plot error-corrected MSDs
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(3.5, 2.5), dpi=300)
 
 w = np.zeros(3*L+1) # total number of monomers: 3*L + 1
 w[L] = -1           # designate "measurement vector" w:
@@ -98,13 +109,13 @@ for condition, color in zip(conditions, colors):
 model_30s = bild.models.MultiStateRouse(3*L+1, D_frames, k_frames,
                                             looppositions = [None, (L, 2*L, 1/L_looped)],       # define "states" (here: 0=unlooped, 1=looped)
                                             measurement = w,
-                                            localization_error = np.sqrt(2)*np.array([43.05,41.00,44.32])/1e3, # convert error back to distance
+                                            localization_error = np.sqrt(np.array([np.exp(all_params[condition][f'30s log(σ²) (dim {k})']) for k in (0,1,2)]))/1e3, # convert error back to distance
                                         )
 
 model_5s = bild.models.MultiStateRouse(3*L+1, D_frames, k_frames,
                                             looppositions = [None, (L, 2*L, 1/L_looped)],       # define "states" (here: 0=unlooped, 1=looped)
                                             measurement = w,
-                                            localization_error = np.sqrt(2)*np.array([44.46,40.41,43.52])/1e3, # convert error back to distance
+                                            localization_error = np.sqrt(np.array([np.exp(all_params[condition][f'5s log(σ²) (dim {k})']) for k in (0,1,2)]))/1e3, # convert error back to distance
                                         )
 
 t_range_frames = np.arange(1, 500)
@@ -131,12 +142,16 @@ ax.axhline(state_model.MSD(np.inf, w=model_30s.measurement), 0, 1, color='#bbbbb
 ax.set_xscale('log')
 ax.set_yscale('log')
 
-ax.set_ylabel('MSD [µm$^2$]')
+ax.set_ylabel('MSD [µm2]')
 ax.set_xlabel('Lag time ∆t [s]')
 
-ax.legend(fontsize=8, loc='lower right')
+ax.legend(fontsize=6, loc='lower right')
+
+ax.spines[['top', 'right']].set_visible(False)
 
 ax.set_title('')
+
+plt.tight_layout()
 
 plt.savefig('bild_outputs/figures/MSDs_loc_error_corrected_with_model.png');
 plt.savefig('bild_outputs/figures/MSDs_loc_error_corrected_with_model.svg');
